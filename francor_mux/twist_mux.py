@@ -23,7 +23,7 @@ class FrancorMux(Node):
 
     self.rate = 50.0
 
-    self.timeout = 0.5
+    self.timeout = 1
 
     #params
 
@@ -35,12 +35,10 @@ class FrancorMux(Node):
     self.declare_parameter('vel_in_3_qos', self.vel_in_3_qos)
     self.declare_parameter('vel_out_topic', self.vel_out_topic)
     self.declare_parameter('vel_out_qos', self.vel_out_qos)
-
     self.declare_parameter('rate', 50.0)
+    self.declare_parameter('timeout', 1)
 
-    self.declare_parameter('timeout', 0.5)
-
-    self.vel_in_1_topic = self.get_parameter('topic_in_1').get_parameter_value().string_value
+    self.vel_in_1_topic = self.get_parameter('vel_in_1_topic').get_parameter_value().string_value
     self.vel_in_1_qos = self.get_parameter('vel_in_1_qos').get_parameter_value().string_value
     self.vel_in_2_topic = self.get_parameter('vel_in_2_topic').get_parameter_value().string_value
     self.vel_in_2_qos = self.get_parameter('vel_in_2_qos').get_parameter_value().string_value
@@ -51,8 +49,22 @@ class FrancorMux(Node):
 
     self.rate = self.get_parameter('rate').get_parameter_value().double_value
 
-    self.timeout = self.get_parameter('timeout').get_parameter_value().double_value
+    self.timeout = self.get_parameter('timeout').get_parameter_value().integer_value
 
+    #print params
+    self.get_logger().info("###########################################")
+    self.get_logger().info("Parameters: ")
+    self.get_logger().info("vel_in_1_topic: " + self.vel_in_1_topic)
+    self.get_logger().info("vel_in_1_qos:   " + self.vel_in_1_qos)
+    self.get_logger().info("vel_in_2_topic: " + self.vel_in_2_topic)
+    self.get_logger().info("vel_in_2_qos:   " + self.vel_in_2_qos)
+    self.get_logger().info("vel_in_3_topic: " + self.vel_in_3_topic)
+    self.get_logger().info("vel_in_3_qos:   " + self.vel_in_3_qos)
+    self.get_logger().info("vel_out_topic:  " + self.vel_out_topic)
+    self.get_logger().info("vel_out_qos:    " + self.vel_out_qos)
+    self.get_logger().info("rate:           " + str(self.rate))
+    self.get_logger().info("timeout:        " + str(self.timeout))
+    self.get_logger().info("###########################################")
 
     #subs
     qos = qos_profile_system_default
@@ -89,11 +101,11 @@ class FrancorMux(Node):
 
   def timer_callback(self):
     #check all last vels and times publish the histes prio only with recent msg
-    if self.get_clock().now() - self.time_vel_in_1 < self.timeout:
+    if (self.get_clock().now() - self.time_vel_in_1).to_msg().sec < self.timeout:
       self.pub_vel_out.publish(self.last_vel_in_1)
-    elif self.get_clock().now() - self.time_vel_in_2 < self.timeout:
+    elif (self.get_clock().now() - self.time_vel_in_2).to_msg().sec < self.timeout:
       self.pub_vel_out.publish(self.last_vel_in_2)
-    elif self.get_clock().now() - self.time_vel_in_3 < self.timeout:
+    elif (self.get_clock().now() - self.time_vel_in_3).to_msg().sec < self.timeout:
       self.pub_vel_out.publish(self.last_vel_in_3)
     else:
       #empty msg
